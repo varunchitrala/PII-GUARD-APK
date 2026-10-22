@@ -1,0 +1,360 @@
+/* Base Warning Container */
+[data-pii-guard-ui="warning"] {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  top: 18px !important;
+  right: 18px !important;
+  width: min(380px, calc(100vw - 36px)) !important;
+  box-sizing: border-box !important;
+  padding: 16px 18px !important;
+  border-radius: 12px !important;
+  font:
+    14px/1.45 system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif !important;
+  text-align: left !important;
+  color: #1f2937 !important;
+  animation: piig-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease,
+    box-shadow 0.2s ease !important;
+}
+
+@keyframes piig-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes piig-pulse-danger {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+  }
+}
+
+[data-pii-guard-ui="warning"] * {
+  box-sizing: border-box !important;
+}
+
+/* Header */
+[data-pii-guard-ui="warning"] .piig-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 10px !important;
+  font-size: 15px !important;
+}
+
+[data-pii-guard-ui="warning"] .piig-shield {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  flex-shrink: 0 !important;
+}
+
+[data-pii-guard-ui="warning"] .piig-close {
+  margin-left: auto !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #4b5563 !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  padding: 0 4px !important;
+  border-radius: 4px !important;
+}
+[data-pii-guard-ui="warning"] .piig-close:hover {
+  background: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Priority Badges */
+.piig-badge {
+  display: inline-block !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+  padding: 2px 7px !important;
+  border-radius: 9999px !important;
+  vertical-align: middle !important;
+  margin-left: auto !important;
+}
+
+/* Detected Items Tags */
+[data-pii-guard-ui="warning"] .piig-items-list {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin: 8px 0 !important;
+}
+
+[data-pii-guard-ui="warning"] .piig-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+}
+
+/* Subtext & Paragraphs */
+[data-pii-guard-ui="warning"] p {
+  margin: 6px 0 !important;
+  font-size: 13px !important;
+}
+
+[data-pii-guard-ui="warning"] .piig-subtext {
+  color: #57534e !important;
+  font-size: 12px !important;
+}
+
+/* Action Buttons */
+[data-pii-guard-ui="warning"] .piig-actions {
+  display: flex !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+}
+
+[data-pii-guard-ui="warning"] .piig-actions button {
+  border-radius: 7px !important;
+  padding: 7px 12px !important;
+  background: #ffffff !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  transition: all 0.15s ease !important;
+}
+
+/* ========================================================
+   SEVERITY THEMES: DANGER (CRITICAL), WARNING (MEDIUM), INFO (LOW)
+   ======================================================== */
+
+/* --- 1. DANGER / CRITICAL PRIORITY --- */
+[data-pii-guard-ui="warning"][data-pii-severity="danger"],
+[data-pii-guard-ui="warning"]:not([data-pii-severity]) {
+  /* Danger is default when high risk PII is detected */
+  border: 1px solid #f87171 !important;
+  border-left: 5px solid #dc2626 !important;
+  background: #fef2f2 !important;
+  box-shadow:
+    0 16px 40px rgba(220, 38, 38, 0.26),
+    0 0 0 1px rgba(220, 38, 38, 0.1) !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="danger"] .piig-header strong {
+  color: #991b1b !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="danger"] .piig-shield {
+  background: #dc2626 !important;
+  animation: piig-pulse-danger 2s infinite ease-in-out !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="danger"] .piig-badge {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border: 1px solid #f87171 !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="danger"]
+  .piig-actions
+  .piig-review {
+  background: #dc2626 !important;
+  border: 1px solid #b91c1c !important;
+  color: #ffffff !important;
+}
+[data-pii-guard-ui="warning"][data-pii-severity="danger"]
+  .piig-actions
+  .piig-review:hover {
+  background: #b91c1c !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="danger"]
+  .piig-actions
+  .piig-dismiss {
+  border: 1px solid #fca5a5 !important;
+  color: #991b1b !important;
+}
+[data-pii-guard-ui="warning"][data-pii-severity="danger"]
+  .piig-actions
+  .piig-dismiss:hover {
+  background: #fee2e2 !important;
+}
+
+/* --- 2. WARNING / MEDIUM PRIORITY --- */
+[data-pii-guard-ui="warning"][data-pii-severity="warning"] {
+  border: 1px solid #fcd34d !important;
+  border-left: 5px solid #d97706 !important;
+  background: #fffbeb !important;
+  box-shadow:
+    0 14px 35px rgba(217, 119, 6, 0.22),
+    0 0 0 1px rgba(217, 119, 6, 0.1) !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="warning"] .piig-header strong {
+  color: #92400e !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="warning"] .piig-shield {
+  background: #d97706 !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="warning"] .piig-badge {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fcd34d !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="warning"]
+  .piig-actions
+  .piig-review {
+  background: #d97706 !important;
+  border: 1px solid #b45309 !important;
+  color: #ffffff !important;
+}
+[data-pii-guard-ui="warning"][data-pii-severity="warning"]
+  .piig-actions
+  .piig-review:hover {
+  background: #b45309 !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="warning"]
+  .piig-actions
+  .piig-dismiss {
+  border: 1px solid #fde68a !important;
+  color: #92400e !important;
+}
+[data-pii-guard-ui="warning"][data-pii-severity="warning"]
+  .piig-actions
+  .piig-dismiss:hover {
+  background: #fef3c7 !important;
+}
+
+/* --- 3. INFO / LOW PRIORITY --- */
+[data-pii-guard-ui="warning"][data-pii-severity="info"] {
+  border: 1px solid #bfdbfe !important;
+  border-left: 5px solid #2563eb !important;
+  background: #eff6ff !important;
+  box-shadow:
+    0 14px 35px rgba(37, 99, 235, 0.18),
+    0 0 0 1px rgba(37, 99, 235, 0.1) !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="info"] .piig-header strong {
+  color: #1e40af !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="info"] .piig-shield {
+  background: #2563eb !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="info"] .piig-badge {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="info"]
+  .piig-actions
+  .piig-review {
+  background: #2563eb !important;
+  border: 1px solid #1d4ed8 !important;
+  color: #ffffff !important;
+}
+[data-pii-guard-ui="warning"][data-pii-severity="info"]
+  .piig-actions
+  .piig-review:hover {
+  background: #1d4ed8 !important;
+}
+
+[data-pii-guard-ui="warning"][data-pii-severity="info"]
+  .piig-actions
+  .piig-dismiss {
+  border: 1px solid #bfdbfe !important;
+  color: #1e40af !important;
+}
+[data-pii-guard-ui="warning"][data-pii-severity="info"]
+  .piig-actions
+  .piig-dismiss:hover {
+  background: #dbeafe !important;
+}
+
+/* Pill Badges for Individual Detected PII Items */
+.piig-pill-danger {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border: 1px solid #fca5a5 !important;
+}
+
+.piig-pill-warning {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #fcd34d !important;
+}
+
+.piig-pill-info {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border: 1px solid #bfdbfe !important;
+}
+
+/* Field Outlines When User Enters Crucial PII */
+[data-pii-field-status="danger"] {
+  outline: 2.5px solid #dc2626 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 8px rgba(220, 38, 38, 0.45) !important;
+}
+
+[data-pii-field-status="warning"] {
+  outline: 2.5px solid #d97706 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 8px rgba(217, 119, 6, 0.35) !important;
+}
+
+[data-pii-field-status="info"] {
+  outline: 2px solid #2563eb !important;
+  outline-offset: 1px !important;
+  box-shadow: 0 0 6px rgba(37, 99, 235, 0.25) !important;
+}
+
+/* Confidence Indicators inside Pills */
+.piig-confidence {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 50% !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  margin-right: 4px !important;
+  flex-shrink: 0 !important;
+}
+
+.piig-confidence-validated {
+  background: #16a34a !important;
+  color: #ffffff !important;
+}
+
+.piig-confidence-potential {
+  background: #9ca3af !important;
+  color: #ffffff !important;
+}

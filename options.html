@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PII Guard Settings</title>
+<style>
+body{font:15px/1.6 system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 20px;color:#1f2937}
+h1{font-size:28px}section{border:1px solid #e5e7eb;border-radius:12px;padding:18px;margin:18px 0}
+label{display:flex;gap:10px;align-items:flex-start}small,.muted{color:#4b5563}
+</style></head>
+<body>
+<h1>PII Guard settings</h1>
+<p>PII Guard checks text in web form fields for common patterns that may indicate personal information.</p>
+<section>
+  <label><input id="enabled" type="checkbox"> <span><b>Enable warnings</b><br><small>Turn detection on or off across supported websites.</small></span></label>
+</section>
+<section>
+  <h2>What it checks</h2>
+  <ul>
+    <li>Email addresses</li>
+    <li>Phone-number-like strings</li>
+    <li>12-digit Aadhaar-like numbers (Verhoeff checksum validated)</li>
+    <li>PAN-like strings</li>
+    <li>13–19 digit payment-card-like numbers</li>
+    <li>Six-digit Indian PIN codes</li>
+    <li>US Social Security Numbers (SSN)</li>
+    <li>Passport numbers</li>
+    <li>Driving License numbers</li>
+    <li>Voter ID (EPIC) numbers</li>
+    <li>Indian IFSC codes</li>
+    <li>International Bank Account Numbers (IBAN)</li>
+    <li>US ZIP+4 codes</li>
+    <li>Date of Birth patterns</li>
+    <li>IPv4 addresses</li>
+    <li>Cryptocurrency wallet addresses</li>
+  </ul>
+</section>
+<section>
+  <h2>Priority & Danger Levels</h2>
+  <ul>
+    <li><b style="color:#dc2626">Critical / Danger (Red Alert)</b>: Crucial financial & identity data including Credit/Debit Cards, SSN, Aadhaar, Passport, PAN, IBAN, and Cryptocurrency wallets.</li>
+    <li><b style="color:#d97706">Medium Risk (Amber Warning)</b>: Driving Licenses, Voter IDs, Bank IFSC codes, Phone numbers, and Dates of Birth.</li>
+    <li><b style="color:#2563eb">Notice / Low (Blue Notice)</b>: Email addresses, IP addresses, and Postal PIN/ZIP codes.</li>
+  </ul>
+</section>
+<section>
+  <h2>Important limitations</h2>
+  <ul>
+    <li>This is a heuristic detector, not a guarantee that all PII will be detected.</li>
+    <li>It can produce false positives (for example, ordinary numbers) and can miss unusual formats.</li>
+    <li>It warns; it does not block form submission or remove data from a website.</li>
+    <li>Some browser-internal pages, Chrome Web Store pages, and restricted frames do not allow extensions to run.</li>
+    <li>Because this extension runs on all websites, it requests broad site access. Review the code before installing it.</li>
+  </ul>
+</section>
+<p id="saved" class="muted"></p>
+<script src="options.js"></script>
+</body></html>

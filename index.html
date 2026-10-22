@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PII Guard Desktop — System-Wide Data Protection</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Custom Titlebar for Electron Frameless Window -->
+  <header class="app-titlebar">
+    <div class="titlebar-left">
+      <div class="logo-shield">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M9 12l2 2 4-4"/>
+        </svg>
+      </div>
+      <span class="app-brand">PII Guard <span class="app-badge">DESKTOP DLP</span></span>
+      <div class="status-indicator-pill active" id="titlebarStatusPill">
+        <span class="pulse-dot"></span>
+        <span class="status-text">MONITORING ACTIVE</span>
+      </div>
+    </div>
+    
+    <div class="titlebar-center">
+      <div class="shortcut-chip" title="Press anywhere on your desktop to summon PII Guard">
+        <span class="kbd">Ctrl</span>+<span class="kbd">Shift</span>+<span class="kbd">P</span>
+      </div>
+    </div>
+
+    <div class="titlebar-right">
+      <button class="win-btn" id="btnMin" title="Minimize">
+        <svg width="12" height="12" viewBox="0 0 12 12"><rect y="5" width="12" height="2" fill="currentColor"/></svg>
+      </button>
+      <button class="win-btn" id="btnMax" title="Maximize">
+        <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1.5" y="1.5" width="9" height="9" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+      </button>
+      <button class="win-btn btn-close" id="btnClose" title="Close to Tray">
+        <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 2L10 10M10 2L2 10" stroke="currentColor" stroke-width="1.8"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="app-sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-section-title">CORE DEFENSE</div>
+        <nav class="nav-menu">
+          <button class="nav-item active" data-tab="tab-dashboard">
+            <span class="nav-icon">🛡️</span>
+            <span class="nav-text">Dashboard</span>
+            <span class="nav-badge" id="threatCountBadge">0</span>
+          </button>
+          <button class="nav-item" data-tab="tab-scanner">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-text">Live Inspector</span>
+          </button>
+          <button class="nav-item" data-tab="tab-file-auditor">
+            <span class="nav-icon">📁</span>
+            <span class="nav-text">File Auditor</span>
+          </button>
+          <button class="nav-item" data-tab="tab-history">
+            <span class="nav-icon">📋</span>
+            <span class="nav-text">Threat Log</span>
+            <span class="nav-counter" id="historyCounter">0</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-section-title" style="margin-top: 24px;">CONFIGURATION</div>
+        <nav class="nav-menu">
+          <button class="nav-item" data-tab="tab-rules">
+            <span class="nav-icon">⚖️</span>
+            <span class="nav-text">Protection Rules</span>
+            <span class="rules-counter" id="rulesActiveCounter">16</span>
+          </button>
+          <button class="nav-item" data-tab="tab-settings">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-text">Preferences</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-bottom">
+        <div class="clipboard-quick-widget">
+          <div class="quick-widget-header">
+            <span>CLIPBOARD SENTINEL</span>
+            <span class="indicator-ring"></span>
+          </div>
+          <div class="quick-widget-actions">
+            <button class="btn-quick" id="btnQuickScanClip" title="Scan current clipboard">
+              <span>Scan Now</span>
+            </button>
+            <button class="btn-quick btn-quick-danger" id="btnQuickMaskClip" title="Mask any PII on clipboard">
+              <span>Mask PII</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-content">
+      
+      <!-- TAB 1: DASHBOARD -->
+      <section class="tab-pane active" id="tab-dashboard">
+        <div class="pane-header">
+          <div>
+            <h1 class="pane-title">System Defense Overview</h1>
+            <p class="pane-subtitle">Continuous background protection across all desktop applications, clipboards, and inputs.</p>
+          </div>
+          <div class="header-actions">
+            <div class="toggle-switch-wrapper">
+              <span class="switch-label">System Monitoring:</span>
+              <label class="switch">
+                <input type="checkbox" id="mainMonitoringToggle" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Protection Banner -->
+        <div class="hero-protection-banner" id="heroBanner">
+          <div class="hero-left">
+            <div class="hero-shield-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <polyline points="9 12 11 14 15 10"/>
+              </svg>
+            </div>
+            <div class="hero-text-block">
+              <div class="hero-status-title" id="heroStatusTitle">System-Wide PII Shield Active</div>
+              <div class="hero-status-desc" id="heroStatusDesc">
+                Monitoring clipboard and text inputs across browsers, office apps, chat clients, and code editors. Instant alert overlay enabled.
+              </div>
+            </div>
+          </div>
+          <div class="hero-right">
+            <button class="btn btn-secondary" id="btnTestAlertOverlay">
+              <span>🔔 Test Alert Overlay</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Metric Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon stat-blue">🔄</div>
+            <div class="stat-content">
+              <div class="stat-number" id="statTotalScans">0</div>
+              <div class="stat-label">Total Text Scans</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-red">🚨</div>
+            <div class="stat-content">
+              <div class="stat-number" id="statPIIDetected">0</div>
+              <div class="stat-label">PII Threats Intercepted</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-amber">🛡️</div>
+            <div class="stat-content">
+              <div class="stat-number" id="statThreatsBlocked">0</div>
+              <div class="stat-label">Critical Data Guarded</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon stat-green">⚡</div>
+            <div class="stat-content">
+              <div class="stat-number" id="statActiveRules">16</div>
+              <div class="stat-label">Active Detection Rules</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Threats & Breakdown Section -->
+        <div class="dashboard-split-grid">
+          <!-- Recent Interceptions -->
+          <div class="panel-card flex-1">
+            <div class="panel-header">
+              <h3 class="panel-title">Recent Intercepted Alerts</h3>
+              <button class="btn-text" id="btnViewAllHistory">View All →</button>
+            </div>
+            <div class="threat-feed" id="dashboardThreatFeed">
+              <div class="empty-state">
+                <span class="empty-icon">🛡️</span>
+                <p>No PII leaks detected recently.</p>
+                <small>When sensitive data is copied or entered anywhere on your computer, it will appear here in real time.</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- PII Category Coverage -->
+          <div class="panel-card w-400">
+            <div class="panel-header">
+              <h3 class="panel-title">Inspection Coverage</h3>
+            </div>
+            <div class="coverage-list">
+              <div class="coverage-item">
+                <div class="coverage-header">
+                  <span>💳 Payment Cards (Visa, MC, Amex, RuPay)</span>
+                  <span class="tag-status">Luhn Validated</span>
+                </div>
+                <div class="meter-bar"><div class="meter-fill" style="width: 100%;"></div></div>
+              </div>
+              <div class="coverage-item">
+                <div class="coverage-header">
+                  <span>🪪 National IDs (Aadhaar, SSN, PAN, Voter)</span>
+                  <span class="tag-status">Verhoeff Validated</span>
+                </div>
+                <div class="meter-bar"><div class="meter-fill" style="width: 100%;"></div></div>
+              </div>
+              <div class="coverage-item">
+                <div class="coverage-header">
+                  <span>🏦 Banking & Finance (IBAN, IFSC)</span>
+                  <span class="tag-status">Mod-97 Validated</span>
+                </div>
+                <div class="meter-bar"><div class="meter-fill" style="width: 100%;"></div></div>
+              </div>
+              <div class="coverage-item">
+                <div class="coverage-header">
+                  <span>📞 Contact & Personal (Phone, Email, DOB)</span>
+                  <span class="tag-status">Active</span>
+                </div>
+                <div class="meter-bar"><div class="meter-fill" style="width: 100%;"></div></div>
+              </div>
+              <div class="coverage-item">
+                <div class="coverage-header">
+                  <span>🌐 Network & Crypto (IPv4, BTC/ETH Wallets)</span>
+                  <span class="tag-status">Active</span>
+                </div>
+                <div class="meter-bar"><div class="meter-fill" style="width: 100%;"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: LIVE INSPECTOR -->
+      <section class="tab-pane" id="tab-scanner">
+        <div class="pane-header">
+          <div>
+            <h1 class="pane-title">Live Text & Input Inspector</h1>
+            <p class="pane-subtitle">Type, paste, or test any snippet in real time with checksum validation and context analysis.</p>
+          </div>
+          <div class="header-actions">
+            <div class="dropdown-container">
+              <label class="field-label-sm">Simulate Field:</label>
+              <select id="selectContextSimulation" class="select-field">
+                <option value="">Auto / Generic Field</option>
+                <option value="card">Payment / Credit Card Field</option>
+                <option value="aadhaar">Aadhaar / National ID Field</option>
+                <option value="pan">PAN Card Field</option>
+                <option value="ssn">Social Security Field</option>
+                <option value="email">Email Address Field</option>
+                <option value="phone">Phone / Mobile Field</option>
+                <option value="search">Search Box (High False-Positive Filter)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="scanner-grid">
+          <!-- Text Input Editor -->
+          <div class="scanner-editor-box">
+            <div class="editor-toolbar">
+              <div class="sample-pills">
+                <span class="sample-label">Quick Samples:</span>
+                <button class="pill-btn" data-sample="aadhaar">Aadhaar (Valid)</button>
+                <button class="pill-btn" data-sample="card">Visa Card (Luhn)</button>
+                <button class="pill-btn" data-sample="ssn">US SSN</button>
+                <button class="pill-btn" data-sample="pan">PAN Card</button>
+                <button class="pill-btn" data-sample="email">Email</button>
+                <button class="pill-btn" data-sample="mixed">Mixed Paragraph</button>
+              </div>
+              <div class="toolbar-right">
+                <button class="btn-icon-text" id="btnPasteClipboard" title="Paste from Clipboard">
+                  <span>📋 Paste Clipboard</span>
+                </button>
+                <button class="btn-icon-text" id="btnClearScanner" title="Clear text">
+                  <span>✕ Clear</span>
+                </button>
+              </div>
+            </div>
+
+            <textarea id="scannerInput" class="scanner-textarea" placeholder="Type or paste any sensitive text here (e.g. 12-digit Aadhaar, Credit Card, SSN, PAN, Phone, Email)..."></textarea>
+
+            <div class="editor-footer">
+              <div class="editor-meta" id="scannerMeta">0 characters | 0 words</div>
+              <div class="editor-actions">
+                <button class="btn btn-secondary" id="btnCopyRedacted" disabled>
+                  <span>🛡️ Copy Masked / Redacted</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Findings Panel -->
+          <div class="scanner-results-box">
+            <div class="results-header">
+              <h3 class="panel-title">Detection Analysis</h3>
+              <span class="findings-badge" id="findingsBadge">0 DETECTED</span>
+            </div>
+
+            <div class="findings-list" id="findingsList">
+              <div class="empty-state">
+                <span class="empty-icon">🔍</span>
+                <p>No PII detected yet.</p>
+                <small>Type or pick a quick sample above to test the real-time detection engine.</small>
+              </div>
+            </div>
+
+            <!-- Preview of Redacted Version -->
+            <div class="redacted-preview-card" id="redactedPreviewCard" style="display: none;">
+              <div class="preview-header">
+                <span>SANITIZED / REDACTED PREVIEW</span>
+                <button class="btn-xs" id="btnCopyRedactedBox">Copy</button>
+              </div>
+              <pre class="redacted-pre" id="redactedTextPre"></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: FILE AUDITOR -->
+      <section class="tab-pane" id="tab-file-auditor">
+        <div class="pane-header">
+          <div>
+            <h1 class="pane-title">Document & File Auditor</h1>
+            <p class="pane-subtitle">Scan local text files, logs, CSVs, or JSON for inadvertent PII leaks before sharing.</p>
+          </div>
+        </div>
+
+        <div class="file-auditor-container">
+          <!-- Dropzone -->
+          <div class="file-dropzone" id="fileDropzone">
+            <input type="file" id="fileInput" accept=".txt,.csv,.json,.log,.md,.xml,.sql,.env,.tsv" style="display: none;">
+            <div class="dropzone-content">
+              <div class="dropzone-icon">📁</div>
+              <h3>Drag & Drop any document here</h3>
+              <p>Supports .txt, .csv, .json, .log, .sql, .env, .md files (up to 15 MB)</p>
+              <button class="btn btn-primary" id="btnBrowseFile">Browse File</button>
+            </div>
+          </div>
+
+          <!-- File Scan Results Area -->
+          <div class="file-results-area" id="fileResultsArea" style="display: none;">
+            <div class="file-summary-card">
+              <div class="file-info">
+                <div class="file-name" id="auditedFileName">document.txt</div>
+                <div class="file-meta" id="auditedFileMeta">0 KB • 0 lines</div>
+              </div>
+              <div class="file-threat-summary">
+                <span class="summary-chip chip-danger" id="fileDangerCount">0 Critical Threats</span>
+                <span class="summary-chip chip-warning" id="fileWarnCount">0 Warnings</span>
+                <button class="btn btn-secondary" id="btnExportSanitizedFile">💾 Export Sanitized File</button>
+              </div>
+            </div>
+
+            <div class="file-findings-table-card">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Line</th>
+                    <th>PII Category</th>
+                    <th>Severity</th>
+                    <th>Masked Preview</th>
+                    <th>Confidence</th>
+                  </tr>
+                </thead>
+                <tbody id="fileFindingsBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: THREAT LOG & AUDIT HISTORY -->
+      <section class="tab-pane" id="tab-history">
+        <div class="pane-header">
+          <div>
+            <h1 class="pane-title">Threat History & Audit Trail</h1>
+            <p class="pane-subtitle">Comprehensive log of every PII alert intercepted across your Windows desktop.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" id="btnExportHistory">📥 Export Log (CSV)</button>
+            <button class="btn btn-danger-outline" id="btnClearHistory">🗑️ Clear History</button>
+          </div>
+        </div>
+
+        <div class="history-filter-bar">
+          <input type="text" id="inputSearchHistory" class="input-search" placeholder="Search by PII type, snippet, or source...">
+          <select id="selectSeverityFilter" class="select-filter">
+            <option value="all">All Severities</option>
+            <option value="danger">Critical (Danger)</option>
+            <option value="warning">Warning</option>
+            <option value="info">Notice (Info)</option>
+          </select>
+        </div>
+
+        <div class="history-table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Source</th>
+                <th>Category</th>
+                <th>Risk Level</th>
+                <th>Masked Snippet</th>
+                <th>Verification</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 5: PROTECTION RULES -->
+      <section class="tab-pane" id="tab-rules">
+        <div class="pane-header">
+          <div>
+            <h1 class="pane-title">PII Detection Rules</h1>
+            <p class="pane-subtitle">Enable or disable specific heuristic detectors, checksum validators, and sensitivity levels.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-secondary" id="btnEnableAllRules">Enable All</button>
+            <button class="btn btn-secondary" id="btnDisableAllRules">Disable All</button>
+          </div>
+        </div>
+
+        <div class="rules-grid" id="rulesGrid">
+          <!-- Dynamically populated rules cards -->
+        </div>
+      </section>
+
+      <!-- TAB 6: PREFERENCES & SETTINGS -->
+      <section class="tab-pane" id="tab-settings">
+        <div class="pane-header">
+          <div>
+            <h1 class="pane-title">Preferences & Defense Settings</h1>
+            <p class="pane-subtitle">Configure system notifications, audio chimes, clipboard auto-masking, and tray behavior.</p>
+          </div>
+        </div>
+
+        <div class="settings-stack">
+          <!-- Section 1: Alert Modalities -->
+          <div class="settings-card">
+            <h3 class="settings-card-title">Alert & Notification Modalities</h3>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Floating Desktop Overlay Banner</span>
+                <span class="setting-desc">Displays a sleek, always-on-top alert banner on top of whichever window you're actively using.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="prefOverlay" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Audible Alert Chime</span>
+                <span class="setting-desc">Plays a subtle cybersecurity alert sound when high-risk PII is intercepted.</span>
+              </div>
+              <div class="setting-controls">
+                <button class="btn-xs" id="btnTestSound">🔊 Test Sound</button>
+                <label class="switch">
+                  <input type="checkbox" id="prefSound" checked>
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Native Windows Notifications</span>
+                <span class="setting-desc">Pushes standard Windows Action Center notifications on detection.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="prefSystemNotif" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Section 2: Clipboard Sentinel Protection -->
+          <div class="settings-card">
+            <h3 class="settings-card-title">Clipboard Sentinel & Auto-Sanitization</h3>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Auto-Mask Clipboard Content</span>
+                <span class="setting-desc">Automatically replaces sensitive numbers on the Windows clipboard with masked characters (••••) immediately upon copy.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="prefAutoMask">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Clipboard Polling Frequency</span>
+                <span class="setting-desc">Rate at which PII Guard checks clipboard changes (350ms recommended for balance of speed and CPU efficiency).</span>
+              </div>
+              <select id="prefPollInterval" class="select-field">
+                <option value="250">Ultra Fast (250ms)</option>
+                <option value="350" selected>Balanced (350ms - Recommended)</option>
+                <option value="500">Eco Mode (500ms)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Section 3: App Lifecycle -->
+          <div class="settings-card">
+            <h3 class="settings-card-title">System & Background Lifecycle</h3>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Minimize to System Tray</span>
+                <span class="setting-desc">Closing the application window will keep PII Guard actively monitoring in the Windows notification area / tray.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="prefMinimizeToTray" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Global Summon Hotkey</span>
+                <span class="setting-desc">Use <kbd>Ctrl+Shift+P</kbd> at any time to bring PII Guard to the front.</span>
+              </div>
+              <span class="badge-info">Active (System-wide)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PII Guard Desktop Alert</title>
+  <style>
+    :root {
+      --danger: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.4);
+      --warning: #f59e0b;
+      --warning-glow: rgba(245, 158, 11, 0.4);
+      --info: #3b82f6;
+      --info-glow: rgba(59, 130, 246, 0.4);
+      --bg: rgba(15, 23, 42, 0.95);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overflow: hidden;
+      padding: 10px;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .alert-card {
+      width: 100%;
+      background: var(--bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      color: var(--text);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px var(--alert-glow, var(--danger-glow));
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      border-left: 4px solid var(--alert-color, var(--danger));
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .shield-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--alert-color, var(--danger));
+      font-size: 14px;
+      box-shadow: 0 0 10px var(--alert-glow, var(--danger-glow));
+      animation: pulse 1.8s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    .title-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--alert-color, var(--danger));
+    }
+
+    .type-label {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 250px;
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .close-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+
+    .card-body {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .snippet-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .snippet-text {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      color: #fca5a5;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .confidence-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(239, 68, 68, 0.25);
+      color: #fecaca;
+    }
+
+    .detail-text {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .action-btn {
+      border: none;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-mask {
+      background: #ef4444;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-mask:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+    }
+
+    .btn-open {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-open:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    .progress-bar-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--alert-color, var(--danger));
+      width: 100%;
+      transform-origin: left;
+      animation: countdown 7s linear forwards;
+    }
+
+    @keyframes countdown {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="alert-card" id="alertCard">
+    <div class="card-header">
+      <div class="header-left">
+        <div class="shield-badge" id="shieldBadge">🛡️</div>
+        <div class="title-group">
+          <span class="app-label" id="severityLabel">CRITICAL PII ALERT</span>
+          <span class="type-label" id="piiType">Payment Card Number</span>
+        </div>
+      </div>
+      <button class="close-btn" id="closeBtn" title="Dismiss">✕</button>
+    </div>
+
+    <div class="card-body">
+      <div class="snippet-row">
+        <span class="snippet-text" id="maskedSnippet">•••• •••• •••• 1234</span>
+        <span class="confidence-badge" id="confidenceBadge">VALIDATED</span>
+      </div>
+      <div class="detail-text" id="detailText">Detected on Windows clipboard from an external application.</div>
+    </div>
+
+    <div class="card-footer">
+      <button class="action-btn btn-mask" id="maskBtn">🛡️ Mask Clipboard</button>
+      <button class="action-btn btn-open" id="openBtn">Open Dashboard</button>
+    </div>
+
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+  </div>
+
+  <script>
+    const { ipcRenderer } = require("electron");
+
+    let dismissTimer = null;
+
+    ipcRenderer.on("show-alert", (event, data) => {
+      const { type, severity, masked, message, confidenceLabel, validated } = data;
+      
+      const card = document.getElementById("alertCard");
+      const severityLabel = document.getElementById("severityLabel");
+      const piiType = document.getElementById("piiType");
+      const maskedSnippet = document.getElementById("maskedSnippet");
+      const confidenceBadge = document.getElementById("confidenceBadge");
+      const detailText = document.getElementById("detailText");
+      const progressBar = document.getElementById("progressBar");
+
+      piiType.textContent = type || "Sensitive Personal Data";
+      maskedSnippet.textContent = masked || "••••••••";
+      detailText.textContent = message || "Sensitive PII detected across your desktop.";
+      confidenceBadge.textContent = validated ? "VERIFIED" : (confidenceLabel || "DETECTED");
+
+      let color = "#ef4444";
+      let glow = "rgba(239, 68, 68, 0.4)";
+      let label = "CRITICAL PII ALERT";
+
+      if (severity === "warning") {
+        color = "#f59e0b";
+        glow = "rgba(245, 158, 11, 0.4)";
+        label = "WARNING: SENSITIVE INFO";
+      } else if (severity === "info") {
+        color = "#3b82f6";
+        glow = "rgba(59, 130, 246, 0.4)";
+        label = "NOTICE: POTENTIAL PII";
+      }
+
+      card.style.setProperty("--alert-color", color);
+      card.style.setProperty("--alert-glow", glow);
+      severityLabel.textContent = label;
+
+      // Reset progress bar animation
+      progressBar.style.animation = "none";
+      progressBar.offsetHeight; // trigger reflow
+      progressBar.style.animation = "countdown 7s linear forwards";
+
+      // Auto-dismiss after 7 seconds
+      clearTimeout(dismissTimer);
+      dismissTimer = setTimeout(() => {
+        ipcRenderer.send("dismiss-overlay");
+      }, 7000);
+    });
+
+    document.getElementById("closeBtn").addEventListener("click", () => {
+      clearTimeout(dismissTimer);
+      ipcRenderer.send("dismiss-overlay");
+    });
+
+    document.getElementById("maskBtn").addEventListener("click", () => {
+      ipcRenderer.send("mask-clipboard-from-overlay");
+      clearTimeout(dismissTimer);
+      ipcRenderer.send("dismiss-overlay");
+    });
+
+    document.getElementById("openBtn").addEventListener("click", () => {
+      ipcRenderer.send("show-main-window");
+      clearTimeout(dismissTimer);
+      ipcRenderer.send("dismiss-overlay");
+    });
+  </script>
+</body>
+</html>

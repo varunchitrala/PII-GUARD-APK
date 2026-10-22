@@ -1,0 +1,29 @@
+{
+  "name": "pii-guard-desktop",
+  "version": "2.0.0",
+  "description": "Real-time system-wide desktop PII protection and alert monitor.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/varunchitrala/PII-GUARD-APK.git"
+  },
+  "keywords": [
+    "pii",
+    "security",
+    "privacy",
+    "electron",
+    "dlp",
+    "aadhaar",
+    "credit-card",
+    "data-loss-prevention"
+  ],
+  "author": "PII Guard Team",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^45.0.0"
+  }
+}

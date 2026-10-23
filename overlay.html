@@ -297,7 +297,8 @@
 
       piiType.textContent = type || "Sensitive Personal Data";
       maskedSnippet.textContent = masked || "••••••••";
-      detailText.textContent = message || "Sensitive PII detected across your desktop.";
+      const sourcePrefix = data.source ? `[${data.source}] ` : "";
+      detailText.textContent = sourcePrefix + (message || "Sensitive PII detected across your desktop.");
       confidenceBadge.textContent = validated ? "VERIFIED" : (confidenceLabel || "DETECTED");
 
       let color = "#ef4444";

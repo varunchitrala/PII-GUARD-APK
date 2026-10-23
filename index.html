@@ -136,7 +136,7 @@
             <div class="hero-text-block">
               <div class="hero-status-title" id="heroStatusTitle">System-Wide PII Shield Active</div>
               <div class="hero-status-desc" id="heroStatusDesc">
-                Monitoring clipboard and text inputs across browsers, office apps, chat clients, and code editors. Instant alert overlay enabled.
+                Intercepting keystrokes and inputs in real time across Notepad, web browsers, Microsoft Office, chat apps, and terminals. Instant alert overlay active.
               </div>
             </div>
           </div>
@@ -452,6 +452,22 @@
         </div>
 
         <div class="settings-stack">
+          <!-- Section 0: Real-Time Typing Sentinel -->
+          <div class="settings-card">
+            <h3 class="settings-card-title">Real-Time Application Typing Sentinel</h3>
+            
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Monitor Keystrokes Across All Windows Apps (Notepad, Word, etc.)</span>
+                <span class="setting-desc">Actively intercepts typing streams in any desktop software (Notepad, Chrome, Word, Slack, Terminal) and triggers alerts the exact second sensitive PII is typed.</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="prefRealtimeTyping" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
           <!-- Section 1: Alert Modalities -->
           <div class="settings-card">
             <h3 class="settings-card-title">Alert & Notification Modalities</h3>

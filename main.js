@@ -9,9 +9,17 @@ const {
   nativeImage,
   globalShortcut,
   screen,
+  shell,
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const { spawn, execSync } = require("child_process");
+const readline = require("readline");
+
+// Required on Windows for Action Center notifications to show
+if (process.platform === "win32") {
+  app.setAppUserModelId("com.piiguard.desktop");
+}
 
 const PATTERNS = require("./patterns.js");
 const DetectionEngine = require("./detection-engine.js");
@@ -29,6 +37,7 @@ allPatternsList.forEach((p) => {
 
 let defaultSettings = {
   monitoringEnabled: true,
+  realtimeTypingMonitor: true,
   soundAlerts: true,
   showDesktopOverlay: true,
   showSystemNotification: true,
@@ -204,16 +213,18 @@ function createMainWindow() {
 }
 
 function createOverlayWindow() {
+  if (overlayWindow && !overlayWindow.isDestroyed()) return;
+
   overlayWindow = new BrowserWindow({
-    width: 420,
-    height: 180,
+    width: 440,
+    height: 190,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
     skipTaskbar: true,
     resizable: false,
     show: false,
-    focusable: false,
+    hasShadow: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -221,17 +232,18 @@ function createOverlayWindow() {
   });
 
   overlayWindow.loadFile(path.join(__dirname, "overlay.html"));
+  overlayWindow.setAlwaysOnTop(true, "screen-saver", 1);
 }
 
 function positionOverlayWindow() {
-  if (!overlayWindow) return;
+  if (!overlayWindow || overlayWindow.isDestroyed()) return;
   const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.workAreaSize;
-  const overlayWidth = 420;
-  const overlayHeight = 180;
+  const workArea = primaryDisplay.workArea;
+  const overlayWidth = 440;
+  const overlayHeight = 190;
   // Position in bottom-right corner with 24px margin
-  const x = width - overlayWidth - 24;
-  const y = height - overlayHeight - 24;
+  const x = Math.round(workArea.x + workArea.width - overlayWidth - 24);
+  const y = Math.round(workArea.y + workArea.height - overlayHeight - 24);
   overlayWindow.setBounds({ x, y, width: overlayWidth, height: overlayHeight });
 }
 
@@ -240,10 +252,25 @@ function showOverlayAlert(alertData) {
   if (!overlayWindow || overlayWindow.isDestroyed()) {
     createOverlayWindow();
   }
-  positionOverlayWindow();
-  overlayWindow.webContents.send("show-alert", alertData);
-  overlayWindow.setAlwaysOnTop(true, "screen-saver");
-  overlayWindow.showInactive();
+
+  const deliver = () => {
+    try {
+      positionOverlayWindow();
+      overlayWindow.webContents.send("show-alert", alertData);
+      overlayWindow.setAlwaysOnTop(true, "screen-saver", 1);
+      overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+      overlayWindow.show();
+      overlayWindow.moveTop();
+    } catch (e) {
+      console.error("showOverlayAlert error:", e);
+    }
+  };
+
+  if (overlayWindow.webContents.isLoading()) {
+    overlayWindow.webContents.once("did-finish-load", deliver);
+  } else {
+    deliver();
+  }
 }
 
 // ─── Tray Creation ────────────────────────────────────────────────
@@ -412,15 +439,20 @@ function handlePIIDetected(detectedResults, fullText, source = "System Clipboard
     mainWindow.webContents.send("pii-detected", alertItem);
   }
 
-  // 2. Show floating desktop overlay
+  // 2. Play audible system sound
+  if (settings.soundAlerts) {
+    try { shell.beep(); } catch {}
+  }
+
+  // 3. Show floating desktop overlay
   showOverlayAlert(alertItem);
 
-  // 3. Show native OS notification
+  // 4. Show native OS notification
   if (settings.showSystemNotification && Notification.isSupported()) {
     const notif = new Notification({
       title: `🚨 PII Alert: ${primaryThreat.type}`,
-      body: `${primaryThreat.message}\nProtected by PII Guard.`,
-      silent: !settings.soundAlerts,
+      body: `[${source}] ${primaryThreat.message}\nProtected by PII Guard.`,
+      silent: false,
     });
     notif.on("click", () => {
       if (mainWindow) {
@@ -431,7 +463,7 @@ function handlePIIDetected(detectedResults, fullText, source = "System Clipboard
     notif.show();
   }
 
-  // 4. Auto-mask if enabled
+  // 5. Auto-mask if enabled
   if (settings.autoMaskClipboard && source === "System Clipboard") {
     maskClipboardContent(detectedResults);
   }
@@ -508,6 +540,148 @@ function startClipboardWatcher() {
       console.error("Clipboard watcher error:", e);
     }
   }, settings.pollInterval || 350);
+}
+
+// ─── Real-Time Global Typing Sentinel (Notepad, Chrome, Word, etc.) ──
+
+let keyboardProcess = null;
+let typingBuffer = "";
+let currentActiveApp = "Desktop Application";
+let typingCheckTimeout = null;
+let lastAlertedTyping = "";
+let lastAlertedTypingTime = 0;
+
+function ensureNativeMonitor() {
+  const exePath = path.join(__dirname, "native", "KeyboardMonitor.exe");
+  const csPath = path.join(__dirname, "native", "KeyboardMonitor.cs");
+  if (fs.existsSync(exePath)) return exePath;
+
+  if (fs.existsSync(csPath)) {
+    try {
+      const cscPath = "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe";
+      if (fs.existsSync(cscPath)) {
+        console.log("Compiling native KeyboardMonitor on the fly...");
+        execSync(`"${cscPath}" /target:exe /out:"${exePath}" /optimize+ "${csPath}"`, {
+          windowsHide: true,
+        });
+        if (fs.existsSync(exePath)) return exePath;
+      }
+    } catch (e) {
+      console.error("Failed to compile native KeyboardMonitor:", e);
+    }
+  }
+  return null;
+}
+
+function startKeyboardWatcher() {
+  if (keyboardProcess) {
+    try { keyboardProcess.kill(); } catch {}
+    keyboardProcess = null;
+  }
+
+  if (settings.realtimeTypingMonitor === false || settings.monitoringEnabled === false) {
+    return;
+  }
+
+  const exePath = ensureNativeMonitor();
+  if (!exePath) {
+    console.warn("[PII Guard] Native keyboard monitor binary not available.");
+    return;
+  }
+
+  try {
+    keyboardProcess = spawn(exePath, [], {
+      stdio: ["pipe", "pipe", "pipe"],
+      windowsHide: true,
+    });
+
+    const rl = readline.createInterface({
+      input: keyboardProcess.stdout,
+      terminal: false,
+    });
+
+    rl.on("line", (line) => {
+      if (!settings.monitoringEnabled || settings.realtimeTypingMonitor === false) return;
+      if (!line || !line.trim()) return;
+
+      try {
+        const data = JSON.parse(line);
+        if (data.status) {
+          console.log("[KeyboardSentinel] Hook status:", data.status);
+          return;
+        }
+
+        const ch = data.char;
+        if (data.app && data.app.trim()) {
+          currentActiveApp = data.app.trim();
+        }
+
+        if (ch === "\b") {
+          // User hit Backspace
+          typingBuffer = typingBuffer.slice(0, -1);
+        } else if (ch === "\n" || ch === "\t" || ch === " ") {
+          if (ch === " ") typingBuffer += " ";
+          // Space / Enter / Tab: evaluate buffer immediately
+          processTypingBuffer(typingBuffer, currentActiveApp);
+          if (ch !== " ") typingBuffer = "";
+        } else {
+          typingBuffer += ch;
+          // Keep buffer limited to last 140 characters
+          if (typingBuffer.length > 140) {
+            typingBuffer = typingBuffer.slice(-140);
+          }
+
+          // Real-time evaluation while typing in any app (Notepad, Word, Chrome, etc.)
+          clearTimeout(typingCheckTimeout);
+          typingCheckTimeout = setTimeout(() => {
+            processTypingBuffer(typingBuffer, currentActiveApp);
+          }, 80);
+        }
+      } catch (err) {
+        // Skip malformed line
+      }
+    });
+
+    keyboardProcess.stderr.on("data", (d) => {
+      console.error("[KeyboardSentinel error]", d.toString());
+    });
+
+    keyboardProcess.on("exit", (code) => {
+      console.log("[KeyboardSentinel exited with code]", code);
+      if (!app.isQuitting && settings.monitoringEnabled && settings.realtimeTypingMonitor !== false) {
+        setTimeout(startKeyboardWatcher, 2000);
+      }
+    });
+  } catch (e) {
+    console.error("Failed to launch KeyboardMonitor:", e);
+  }
+}
+
+function processTypingBuffer(buffer, appName) {
+  if (!buffer || buffer.trim().length < 5) return;
+
+  stats.totalScans += 1;
+  const detections = scanTextContent(buffer);
+  if (!detections || !detections.length) return;
+
+  const primary = detections[0];
+  const matchedVal = primary.rawText || buffer;
+  const now = Date.now();
+
+  // Deduplicate alerts for same typed text within 6 seconds
+  if (matchedVal === lastAlertedTyping && now - lastAlertedTypingTime < 6000) {
+    return;
+  }
+
+  lastAlertedTyping = matchedVal;
+  lastAlertedTypingTime = now;
+
+  const cleanApp = appName && appName !== "Unknown" ? appName : "Desktop Application";
+  const sourceLabel = `Typing in ${cleanApp}`;
+
+  console.log(`[PII Guard] 🚨 Intercepted ${primary.type} from ${sourceLabel}: "${primary.masked || matchedVal}"`);
+
+  handlePIIDetected(detections, buffer, sourceLabel);
 }
 
 function broadcastState() {
@@ -634,6 +808,7 @@ if (!gotTheLock) {
     createOverlayWindow();
     createTray();
     startClipboardWatcher();
+    startKeyboardWatcher();
 
     // Register global hotkey to summon scanner
     try {
@@ -666,5 +841,9 @@ if (!gotTheLock) {
   app.on("will-quit", () => {
     globalShortcut.unregisterAll();
     if (monitorInterval) clearInterval(monitorInterval);
+    if (keyboardProcess) {
+      try { keyboardProcess.kill(); } catch {}
+      keyboardProcess = null;
+    }
   });
 }

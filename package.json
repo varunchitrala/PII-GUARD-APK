@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "build:native": "powershell -ExecutionPolicy Bypass -Command \"& 'C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\csc.exe' /target:exe /out:'native\\KeyboardMonitor.exe' /optimize+ 'native\\KeyboardMonitor.cs'\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

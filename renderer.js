@@ -207,7 +207,7 @@
       }
     }
 
-    // Settings checkboxes
+    const prefRealtimeTyping = document.getElementById("prefRealtimeTyping");
     const prefOverlay = document.getElementById("prefOverlay");
     const prefSound = document.getElementById("prefSound");
     const prefSystemNotif = document.getElementById("prefSystemNotif");
@@ -215,6 +215,7 @@
     const prefMinimizeToTray = document.getElementById("prefMinimizeToTray");
     const prefPollInterval = document.getElementById("prefPollInterval");
 
+    if (prefRealtimeTyping) prefRealtimeTyping.checked = currentSettings.realtimeTypingMonitor !== false;
     if (prefOverlay) prefOverlay.checked = currentSettings.showDesktopOverlay !== false;
     if (prefSound) prefSound.checked = currentSettings.soundAlerts !== false;
     if (prefSystemNotif) prefSystemNotif.checked = currentSettings.showSystemNotification !== false;
@@ -745,6 +746,7 @@
 
   // ─── Preferences Setup ───
   function setupPreferences() {
+    const prefRealtimeTyping = document.getElementById("prefRealtimeTyping");
     const prefOverlay = document.getElementById("prefOverlay");
     const prefSound = document.getElementById("prefSound");
     const prefSystemNotif = document.getElementById("prefSystemNotif");
@@ -756,6 +758,12 @@
     btnTestSound?.addEventListener("click", () => {
       playAlertChime();
       showToast("Played alert chime test.", "info");
+    });
+
+    prefRealtimeTyping?.addEventListener("change", async (e) => {
+      currentSettings.realtimeTypingMonitor = e.target.checked;
+      await window.piiGuardAPI?.updateSettings(currentSettings);
+      showToast(e.target.checked ? "Real-time typing monitor active." : "Real-time typing monitor paused.", e.target.checked ? "success" : "warning");
     });
 
     prefOverlay?.addEventListener("change", async (e) => {

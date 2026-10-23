@@ -20,12 +20,12 @@
 
   // Confidence score components
   const SCORE = {
-    PATTERN_MATCH: 0.40,
+    PATTERN_MATCH: 0.50,
     VALIDATION_PASS: 0.30,
     CONTEXT_SUPPORTS: 0.20,
     CONTEXT_NON_PII: -0.25,
     CONTEXT_DIFFERENT_TYPE: -0.10,
-    MINIMUM_WARN: 0.40,
+    MINIMUM_WARN: 0.35,
     VALIDATED_THRESHOLD: 0.70,
   };
 
@@ -81,18 +81,17 @@
               validationDetail = pattern.getDetail(matchedText, fieldContext, text);
             }
           } else {
-            // For patterns requiring strict validation (such as Aadhaar Verhoeff,
-            // Credit Card Luhn, IBAN Mod-97), failed validation means it is NOT a match.
             if (pattern.requireValidation) {
               continue;
             }
-            // Failed validation: heavily penalize so field context alone cannot trigger it
-            confidence -= 0.30;
+            // Soft penalty: still allow pattern match warning (e.g. mock 12/16 digits in Notepad)
+            confidence = Math.max(0.40, confidence - 0.05);
           }
         } catch {
           if (pattern.requireValidation) {
             continue;
           }
+          confidence = Math.max(0.40, confidence - 0.05);
         }
       } else if (pattern.requireValidation) {
         continue;

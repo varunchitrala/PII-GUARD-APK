@@ -374,11 +374,11 @@ const PATTERNS = [
   // --- Critical / High Priority (Danger) ---
   {
     type: "Credit/debit card-like number",
-    regex: /(?<!\d)\b[2-68](?:[ -]?\d){12,18}\b(?!\d)/,
+    regex: /(?<!\d)\b[1-9](?:[ -]?\d){12,18}\b(?!\d)/,
     severity: "danger",
     priority: 3,
     minLength: 13,
-    requireValidation: true,
+    requireValidation: false,
     validate: validateCreditCard,
     getDetail(text) {
       const digits = text.replace(/\D/g, "");
@@ -400,14 +400,14 @@ const PATTERNS = [
   },
   {
     type: "Indian Aadhaar-like number",
-    regex: /(?<![+\d@.])(?<!\d{4}[ -])\b[2-9]\d{3}[ -]?\d{4}[ -]?\d{4}\b(?!\d)(?![ -]\d{4})(?![@.])/,
+    regex: /(?<![+\d@.])(?<!\d{4}[ -])\b[1-9]\d{3}[ -]?\d{4}[ -]?\d{4}\b(?!\d)(?![ -]\d{4})(?![@.])/,
     severity: "danger",
     priority: 3,
     minLength: 12,
-    requireValidation: true,
+    requireValidation: false,
     validate: validateAadhaar,
     getDetail(text) {
-      return "Matches 12-digit format (starting with 2-9) and passes Verhoeff checksum.";
+      return "Matches 12-digit format and passes Verhoeff checksum.";
     },
     description: "This value matches the 12-digit Indian Aadhaar number format.",
     limitations: "Mathematical & format validation confirms checksum and structural validity. Cannot verify issuance without authorized UIDAI API access.",
@@ -431,7 +431,7 @@ const PATTERNS = [
     severity: "danger",
     priority: 3,
     minLength: 10,
-    requireValidation: true,
+    requireValidation: false,
     validate: validatePAN,
     description: "This value matches the Indian PAN (Permanent Account Number) format.",
     limitations: "Validates structure and entity type character. Cannot confirm issuance.",
